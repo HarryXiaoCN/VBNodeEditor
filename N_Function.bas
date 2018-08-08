@@ -9,7 +9,7 @@ Dim i As Long
 ReDim Main(10) As New Home
 For i = 0 To ZSum
     Main(i).Show
-    Main(i).Scale (0, 0)-(Main(i).Width, Main(i).Height)
+    Main(i).Scale (-Main(i).Width / 2, Main(i).Height / 2)-(Main(i).Width / 2, -Main(i).Height / 2)
     HomeCapationVisFilePath Main(i), i
 Next
 End Function

@@ -12,17 +12,19 @@ Public Type 段
     End As Long
 End Type
 Public Type 单元
-    A As Boolean '存在性
+    a As Boolean '存在性
     Strat As Boolean
     Order As Long
     Title As String
     Content() As String
+    SourceSum As Long
+    TargetSum As Long
     X As Single
     Y As Single
     Z As Long
 End Type
 Public Type 联系
-    A As Boolean
+    a As Boolean
     Target As Long
     Source As Long
 End Type
