@@ -4,6 +4,7 @@ Public Type 三维坐标
     Y As Single
     Z As Single
     Target As Long
+    Aim As Long
 End Type
 Public Type 段
     Title As String
@@ -15,6 +16,7 @@ Public Type 单元
     a As Boolean '存在性
     Strat As Boolean
     Order As Long
+    Color As Long
     Title As String
     Content() As String
     SourceSum As Long
