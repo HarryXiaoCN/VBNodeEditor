@@ -7,6 +7,7 @@ End Sub
 Public Function NewFileLoad()
 Dim i As Long
 ReDim XMB(10) As New Home
+ScalingRate = 1
 For i = 0 To 9
     If i = 0 Then XMB(i).Show Else Load XMB(i)
     XMB(i).Scale (-XMB(i).Width / 2, XMB(i).Height / 2)-(XMB(i).Width / 2, -XMB(i).Height / 2)

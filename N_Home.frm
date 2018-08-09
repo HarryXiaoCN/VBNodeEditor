@@ -5,7 +5,7 @@ Begin VB.Form Home
    Caption         =   "Home"
    ClientHeight    =   6960
    ClientLeft      =   225
-   ClientTop       =   855
+   ClientTop       =   555
    ClientWidth     =   13815
    FillColor       =   &H00C0C000&
    FillStyle       =   0  'Solid
@@ -21,7 +21,7 @@ Begin VB.Form Home
    LinkTopic       =   "Form1"
    ScaleHeight     =   6960
    ScaleWidth      =   13815
-   StartUpPosition =   3  '窗口缺省
+   StartUpPosition =   2  '屏幕中心
    Begin VB.Timer Timer1 
       Interval        =   10
       Left            =   13200
@@ -106,6 +106,12 @@ Begin VB.Form Home
          Shortcut        =   ^F
       End
    End
+   Begin VB.Menu 模式 
+      Caption         =   "模式"
+      Begin VB.Menu 编辑模式 
+         Caption         =   "编辑模式"
+      End
+   End
 End
 Attribute VB_Name = "Home"
 Attribute VB_GlobalNameSpace = False
@@ -137,27 +143,39 @@ Select Case KeyCode
         End If
 End Select
 End Sub
+
+Private Sub Form_Load()
+HookMouse Me.hwnd
+End Sub
+
 Private Sub Form_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim i As Long
 If NodeReDimLock = False Then Exit Sub
-For i = 1 To UBound(节点) - 1
-    If 节点(i).a = True Then
-        If X + 100 > 节点(i).X And X - 100 < 节点(i).X _
-        And Y + 100 > 节点(i).Y And Y - 100 < 节点(i).Y Then
-            MousePlace.Target = i: If 节点(i).Color = 0 Then 节点(i).Color = 1
-            If 节点(i).Color = 2 Then 节点(i).Color = 3
-            Exit Sub
+If Button = 1 Then
+    For i = 1 To UBound(节点) - 1
+        If 节点(i).a = True Then
+            If X + 100 > 节点(i).X And X - 100 < 节点(i).X _
+            And Y + 100 > 节点(i).Y And Y - 100 < 节点(i).Y Then
+                MousePlace.Target = i: If 节点(i).Color = 0 Then 节点(i).Color = 1
+                If 节点(i).Color = 2 Then 节点(i).Color = 3
+                Exit Sub
+            End If
         End If
-    End If
-Next
-MousePlace.Target = 0: MouseDownPosition(0) = X: MouseDownPosition(1) = Y: MouseDownLock = True
+    Next
+    Me.MousePointer = 15
+    MousePlace.Target = 0: MouseDownPosition(0) = X: MouseDownPosition(1) = Y: MouseDownLock = True
+End If
+If Button = 2 Then NodeEditor.Show: EditLock = MeID: Me.Enabled = False
 End Sub
 Private Sub Form_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
-If NodeReDimLock = False Then Exit Sub
-If 节点(MousePlace.Target).Color = 1 Then 节点(MousePlace.Target).Color = 0
-If 节点(MousePlace.Target).Color = 3 Then 节点(MousePlace.Target).Color = 2
-MousePlace.Target = 0
-MouseDownLock = False
+If Button = 1 Then
+    If NodeReDimLock = False Then Exit Sub
+    Me.MousePointer = 1
+    If 节点(MousePlace.Target).Color = 1 Then 节点(MousePlace.Target).Color = 0
+    If 节点(MousePlace.Target).Color = 3 Then 节点(MousePlace.Target).Color = 2
+    MousePlace.Target = 0
+    MouseDownLock = False
+End If
 End Sub
 Private Sub Form_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 With MousePlace
@@ -167,17 +185,29 @@ With MousePlace
 End With
 End Sub
 Private Sub Form_Resize()
-Me.Scale (-Me.Width / 2, Me.Height / 2)-(Me.Width / 2, -Me.Height / 2)
+If Me.Height < 4000 Then Me.Height = 4000: Me.Enabled = False: Me.Enabled = True
+If Me.Width < 4000 Then Me.Width = 4000: Me.Enabled = False: Me.Enabled = True
+Me.Scale (-Me.Width / 2 * ScalingRate, Me.Height / 2 * ScalingRate)-(Me.Width / 2 * ScalingRate, -Me.Height / 2 * ScalingRate)
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
-If MeID = 0 Then End
+Dim i As Long
+On Error GoTo Er
+UnHookMouse Me.hwnd
+If MeID = 0 Then
+    For i = 1 To UBound(XMB) - 1
+        Unload XMB(i)
+    Next
+End If
+Exit Sub
+Er:
+End
 End Sub
-
 Private Sub Timer1_Timer()
 Dim i, c As Long
 Me.Cls
 If NodeReDimLock = False Then Exit Sub
+Me.Scale (-Me.Width / 2 * ScalingRate, Me.Height / 2 * ScalingRate)-(Me.Width / 2 * ScalingRate, -Me.Height / 2 * ScalingRate)
 For i = 1 To LSum
     If 连接(i).a = True Then
         If 显示节点连接.Checked = True Then
@@ -227,7 +257,6 @@ For i = 1 To UBound(节点) - 1
                 Me.CurrentY = 节点(i).Y
                 Me.Print 节点(i).Title
             End If
-            Me.CurrentX = -Me.Width / 2: Me.CurrentY = Me.Height / 2: Me.Print i; 节点(i).SourceSum; 节点(i).TargetSum
         Else
             If MousePlace.Target <> i And 节点(i).Color = 1 Then 节点(i).Color = 0
             If MousePlace.Target <> i And 节点(i).Color = 3 Then 节点(i).Color = 2
@@ -283,6 +312,11 @@ Else
     Next
     Vis(0).Checked = True
 End If
+End Sub
+
+Private Sub 编辑模式_Click()
+If NodeReDimLock = False Then ReDim Preserve 节点(1000) As 单元 Else ReDim Preserve 节点(UBound(节点) + 1000) As 单元
+NodeReDimLock = True: Me.Caption = Me.Caption & " - 编辑模式"
 End Sub
 
 Private Sub 打开_Click()
