@@ -19,6 +19,7 @@ Public Type ตฅิช
     Color As Long
     Title As String
     Content() As String
+    ContentOne As String
     SourceSum As Long
     TargetSum As Long
     X As Single

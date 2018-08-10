@@ -1,11 +1,12 @@
 Attribute VB_Name = "N_VarSet"
 Option Explicit
-Public VBbasPath, VBbasName, VBbasFunctionName As String
-Public ZSum, ZNow, EditLock As Long
+Public VBbasPath, VBbasName, VBbasFunctionName  As String
+Public ZSum, ZNow, EditLock, EditMod As Long
 Public ScalingRate As Single
 Public XMB() As New Home
 Public MousePlace As 三维坐标
 Public Package(1 To 999) As 段
+Public NewNode As 单元
 Public Const Pi = 3.14159265358979
 
 Private Declare Function CallWindowProc Lib "User32" Alias "CallWindowProcA" (ByVal lpPrevWndFunc As Long, ByVal hwnd As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long

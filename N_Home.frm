@@ -55,6 +55,15 @@ Begin VB.Form Home
          Caption         =   "退出"
       End
    End
+   Begin VB.Menu 编辑 
+      Caption         =   "编辑"
+      Begin VB.Menu 更改启动节点 
+         Caption         =   "更改启动节点"
+      End
+   End
+   Begin VB.Menu 运行 
+      Caption         =   "运行"
+   End
    Begin VB.Menu 视图 
       Caption         =   "视图"
       Begin VB.Menu 节点布局 
@@ -110,6 +119,9 @@ Begin VB.Form Home
       Caption         =   "模式"
       Begin VB.Menu 编辑模式 
          Caption         =   "编辑模式"
+         Begin VB.Menu VBS创作 
+            Caption         =   "VBS创作"
+         End
       End
    End
 End
@@ -120,9 +132,9 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private 节点() As 单元
 Private 连接(1 To 999) As 联系
-Private MeID, MeName, LSum As Long
+Private MeID, MeName, LSum, NSum As Long
 Private MouseDownPosition(2) As Single
-Private NodeReDimLock, MouseDownLock, FindLock As Boolean
+Private NodeReDimLock, MouseDownLock, FindLock, LLock As Boolean
 Private Sub Form_Activate()
 Dim STemp '获得窗体的Z坐标
 On Error GoTo Er
@@ -145,7 +157,7 @@ End Select
 End Sub
 
 Private Sub Form_Load()
-HookMouse Me.hwnd
+'HookMouse Me.hwnd
 End Sub
 
 Private Sub Form_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
@@ -156,7 +168,7 @@ If Button = 1 Then
         If 节点(i).a = True Then
             If X + 100 > 节点(i).X And X - 100 < 节点(i).X _
             And Y + 100 > 节点(i).Y And Y - 100 < 节点(i).Y Then
-                MousePlace.Target = i: If 节点(i).Color = 0 Then 节点(i).Color = 1
+                MousePlace.Target = i
                 If 节点(i).Color = 2 Then 节点(i).Color = 3
                 Exit Sub
             End If
@@ -165,7 +177,18 @@ If Button = 1 Then
     Me.MousePointer = 15
     MousePlace.Target = 0: MouseDownPosition(0) = X: MouseDownPosition(1) = Y: MouseDownLock = True
 End If
-If Button = 2 Then NodeEditor.Show: EditLock = MeID: Me.Enabled = False
+If Button = 2 Then
+    NodeEditor.Show: EditLock = MeID: Me.Enabled = False
+    Do While Me.Enabled = False
+        DoEvents
+    Loop
+    NSum = NSum + 1
+    With 节点(NSum)
+        .a = True: .Title = NewNode.Title: .ContentOne = NewNode.ContentOne
+        .X = X: .Y = Y: .Z = MeID
+        If NSum = 1 Then .Strat = True
+    End With
+End If
 End Sub
 Private Sub Form_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
 If Button = 1 Then
@@ -173,6 +196,7 @@ If Button = 1 Then
     Me.MousePointer = 1
     If 节点(MousePlace.Target).Color = 1 Then 节点(MousePlace.Target).Color = 0
     If 节点(MousePlace.Target).Color = 3 Then 节点(MousePlace.Target).Color = 2
+    If 节点(MousePlace.Target).Color = 4 Then 节点(MousePlace.Target).Color = 1
     MousePlace.Target = 0
     MouseDownLock = False
 End If
@@ -193,7 +217,7 @@ End Sub
 Private Sub Form_Unload(Cancel As Integer)
 Dim i As Long
 On Error GoTo Er
-UnHookMouse Me.hwnd
+'UnHookMouse Me.hwnd
 If MeID = 0 Then
     For i = 1 To UBound(XMB) - 1
         Unload XMB(i)
@@ -208,6 +232,10 @@ Dim i, c As Long
 Me.Cls
 If NodeReDimLock = False Then Exit Sub
 Me.Scale (-Me.Width / 2 * ScalingRate, Me.Height / 2 * ScalingRate)-(Me.Width / 2 * ScalingRate, -Me.Height / 2 * ScalingRate)
+'If LLock = True Then
+'    Me.Line (节点(MousePlace.Target).X, 节点(MousePlace.Target).Y)-((节点(MousePlace.Target).X + MousePlace.X) / 2, (节点(MousePlace.Target).Y + MousePlace.Y) / 2), RGB(255, 0, 0)
+'    Me.Line ((节点(MousePlace.Target).X + MousePlace.X) / 2, (节点(MousePlace.Target).Y + MousePlace.Y) / 2)-(MousePlace.X, MousePlace.Y), RGB(0, 0, 255)
+'End If
 For i = 1 To LSum
     If 连接(i).a = True Then
         If 显示节点连接.Checked = True Then
@@ -229,7 +257,13 @@ For i = 1 To UBound(节点) - 1
     If 节点(i).a = True Then
         Select Case 节点(i).Color
             Case 0
-                Me.Circle (节点(i).X, 节点(i).Y), 100, RGB(0, 191, 255)
+                If 节点(i).Strat = False Then
+                    Me.Circle (节点(i).X, 节点(i).Y), 100, RGB(0, 191, 255)
+                Else
+                    Me.FillColor = RGB(255, 215, 0)
+                    Me.Circle (节点(i).X, 节点(i).Y), 100, RGB(255, 215, 0)
+                    Me.FillColor = &HC0C000
+                End If
             Case 1
                 Me.FillColor = RGB(255, 0, 0)
                 Me.Circle (节点(i).X, 节点(i).Y), 150, RGB(255, 0, 0)
@@ -247,17 +281,23 @@ For i = 1 To UBound(节点) - 1
                 Me.FillColor = RGB(128, 0, 128)
                 Me.Circle (节点(i).X, 节点(i).Y), 150, RGB(128, 0, 128)
                 Me.FillColor = &HC0C000
+            Case 4
+                Me.FillColor = RGB(127, 255, 0)
+                Me.Circle (节点(i).X, 节点(i).Y), 150, RGB(127, 255, 0)
+                Me.FillColor = &HC0C000
         End Select
         If MousePlace.X + 120 > 节点(i).X And MousePlace.X - 120 < 节点(i).X _
         And MousePlace.Y + 120 > 节点(i).Y And MousePlace.Y - 120 < 节点(i).Y Then
             If 节点(i).Color = 0 Then 节点(i).Color = 1: MousePlace.Aim = i
             If 节点(i).Color = 2 Then 节点(i).Color = 3
+            If MousePlace.Target = i Then 节点(i).Color = 4
             If 显示节点标题.Checked = False Then
                 Me.CurrentX = 节点(i).X
                 Me.CurrentY = 节点(i).Y
                 Me.Print 节点(i).Title
             End If
         Else
+            MousePlace.Aim = 0
             If MousePlace.Target <> i And 节点(i).Color = 1 Then 节点(i).Color = 0
             If MousePlace.Target <> i And 节点(i).Color = 3 Then 节点(i).Color = 2
         End If
@@ -284,7 +324,7 @@ If 调用次数指向.Checked = True Or 引用次数指向.Checked = True Then
         End If
     Next
 End If
-If MousePlace.Target <> 0 And MousePlace.Z = MeID Then
+If MousePlace.Target <> 0 And MouseDownLock = True And MousePlace.Z = MeID Then
     节点(MousePlace.Target).X = MousePlace.X
     节点(MousePlace.Target).Y = MousePlace.Y
 End If
@@ -299,6 +339,14 @@ If MouseDownLock = True Then
     MouseDownPosition(1) = MousePlace.Y
 End If
 End Sub
+
+Private Sub VBS创作_Click()
+If EditMod = 1 Then 新建_Click
+EditMod = 2
+If NodeReDimLock = False Then ReDim Preserve 节点(1000) As 单元 Else ReDim Preserve 节点(UBound(节点) + 1000) As 单元
+NodeReDimLock = True: Me.Caption = Me.Caption & " - VBS编辑模式"
+End Sub
+
 Private Sub Vis_Click(Index As Integer)
 Dim i As Long
 If Vis(Index).Checked = False Then
@@ -314,25 +362,24 @@ Else
 End If
 End Sub
 
-Private Sub 编辑模式_Click()
-If NodeReDimLock = False Then ReDim Preserve 节点(1000) As 单元 Else ReDim Preserve 节点(UBound(节点) + 1000) As 单元
-NodeReDimLock = True: Me.Caption = Me.Caption & " - 编辑模式"
-End Sub
 
 Private Sub 打开_Click()
 Dim Crosswise, Lengthways As Long
 新建_Click
 CommonDialog1.CancelError = True
-'On Error GoTo ErrHandler
+On Error GoTo ErrHandler
 ' 设置标志
 CommonDialog1.Flags = cdlOFNHideReadOnly
 ' 设置过滤器
-CommonDialog1.Filter = "VBBas Files" & _
-"(*.bas)|*.bas|All Files (*.*)|*.*"
+CommonDialog1.Filter = "VB模块" & _
+"(*.bas)|*.bas|VB脚本 (*.vbs)|*.vbs"
 CommonDialog1.FilterIndex = 1
 CommonDialog1.ShowOpen
 VBbasName = CommonDialog1.FileTitle
+If InStr(1, VBbasName, ".bas") <> 0 Then EditMod = 1 Else EditMod = 2
 VBbasPath = CommonDialog1.FileName
+Select Case EditMod
+Case 1
 '---------------VBbasToN-----------
 Dim StrLine() As String: Dim LineSum, fSUM, i, c, j, k, Max(2, 2) As Long
 Dim Angle, CX As Single: Dim TarSumTemp As Long: Dim VisLock() As Boolean
@@ -354,7 +401,8 @@ Open VBbasPath For Input As #1
             If InStr(1, StrLine(LineSum), "Public Function ") = 1 _
             Or InStr(1, StrLine(LineSum), "Public Sub ") = 1 _
             Or InStr(1, StrLine(LineSum), "Private Function ") = 1 _
-            Or InStr(1, StrLine(LineSum), "Private Sub ") = 1 Then
+            Or InStr(1, StrLine(LineSum), "Private Sub ") = 1 _
+            Or InStr(1, StrLine(LineSum), "Sub Main") = 1 Then
                 fSUM = fSUM + 1: Package(fSUM).Start = LineSum
                 Package(fSUM).Title = Mid(STemp(2), 1, InStr(1, STemp(2), "(") - 1)
             End If
@@ -616,6 +664,9 @@ If Vis(3).Checked = True Then
         End If
     Next
 End If
+Case 2
+    
+End Select
 NodeReDimLock = True
 '----------------End---------------
 Exit Sub
@@ -670,4 +721,19 @@ End Sub
 
 Private Sub 引用次数指向_Click()
 If 引用次数指向.Checked = True Then 引用次数指向.Checked = False Else 引用次数指向.Checked = True
+End Sub
+
+Private Sub 运行_Click()
+Dim StartNode As Long
+Dim i As Long
+For i = 1 To NSum
+    If 节点(i).Strat = True Then
+        StartNode = i: Exit For
+    End If
+Next
+For i = 1 To LSum
+    If 连接(i).Source = StartNode Then
+        
+    End If
+Next
 End Sub

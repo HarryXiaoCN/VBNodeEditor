@@ -87,6 +87,10 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Command1_Click()
+With NewNode
+    .Title = Text1.Text
+    .ContentOne = RichTextBox1.Text
+End With
 Unload Me
 End Sub
 
